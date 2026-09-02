@@ -1,0 +1,427 @@
+
+
+Days of week · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Days of the Week</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;600;700;800&display=swap');
+ 
+:root {
+  --header: #3A4630;
+  --cream: #F6F2E8;
+  --ink: #2A2A22;
+  --ink-soft: #6b6353;
+  --line: #E3DCC9;
+  --accent: #E7C24C;
+}
+ 
+* { box-sizing: border-box; }
+ 
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+}
+ 
+header {
+  background: var(--header);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  flex-wrap: wrap;
+}
+ 
+.back-link {
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 17.5px;
+  white-space: nowrap;
+}
+.back-link:hover { color: #fff; }
+ 
+.brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 28.5px;
+  flex: 1;
+  text-align: center;
+}
+ 
+.hdr-btn {
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 17.5px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hdr-btn:hover { background: rgba(0,0,0,0.34); }
+ 
+.layout {
+  display: flex;
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 24px 60px;
+  flex-wrap: wrap;
+}
+ 
+.prompts {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+ 
+.prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+ 
+.prompt-label {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 34px;
+  white-space: nowrap;
+}
+ 
+.blank {
+  flex: 1;
+  min-width: 180px;
+  min-height: 72px;
+  border-bottom: 4px solid var(--ink);
+  display: flex;
+  align-items: center;
+  padding: 0 6px 6px;
+  cursor: pointer;
+}
+ 
+.blank.drag-over {
+  border-bottom-color: var(--accent);
+  background: rgba(231,194,76,0.15);
+}
+ 
+.blank .placed-chip {
+  cursor: grab;
+}
+ 
+.tray {
+  width: 260px;
+  flex-shrink: 0;
+}
+ 
+.tray-label {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+  text-align: center;
+}
+ 
+.day-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+ 
+.day-chip {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 16px 24px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 23.5px;
+  text-align: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+ 
+.day-chip.selected {
+  box-shadow: 0 0 0 4px rgba(42,42,34,0.35);
+}
+ 
+.day-chip.placeholder {
+  background: transparent;
+  border: 2px dashed var(--line);
+  color: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+ 
+.tray.drag-over {
+  outline: 3px dashed var(--ink);
+  outline-offset: 6px;
+  border-radius: 16px;
+}
+ 
+.dragging-source { opacity: 0.35; }
+ 
+.drag-ghost {
+  position: fixed;
+  top: 0; left: 0;
+  background: var(--accent);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 16px 24px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 23.5px;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+ 
+.hint {
+  text-align: center;
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-top: 14px;
+  min-height: 16px;
+}
+</style>
+</head>
+<body>
+  <header>
+    <a class="back-link" href="../">&larr; All Tools</a>
+    <div class="brand">Days of the Week</div>
+    <button class="hdr-btn" id="resetBtn">Reset</button>
+  </header>
+ 
+  <div class="layout">
+    <div class="prompts">
+      <div class="prompt-row">
+        <div class="prompt-label">Today is</div>
+        <div class="blank" data-slot="today"></div>
+      </div>
+      <div class="prompt-row">
+        <div class="prompt-label">Yesterday was</div>
+        <div class="blank" data-slot="yesterday"></div>
+      </div>
+      <div class="prompt-row">
+        <div class="prompt-label">Tomorrow will be</div>
+        <div class="blank" data-slot="tomorrow"></div>
+      </div>
+    </div>
+ 
+    <div class="tray" id="dayTray">
+      <div class="tray-label">Drag a day, or tap to select</div>
+      <div class="day-chips" id="dayChips"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </div>
+ 
+<script>
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_COLORS = {
+  Sunday:    '#F3C9C6',
+  Monday:    '#F4D9B8',
+  Tuesday:   '#EFE3A0',
+  Wednesday: '#C9DDC0',
+  Thursday:  '#BEDADB',
+  Friday:    '#C7D3EA',
+  Saturday:  '#D9C9E3'
+};
+const SLOTS = ['today', 'yesterday', 'tomorrow'];
+ 
+let placed = {}; // slot -> day
+let selected = null; // day currently tap-selected in the tray
+ 
+const dayChipsEl = document.getElementById('dayChips');
+const trayEl = document.getElementById('dayTray');
+const hintEl = document.getElementById('hint');
+ 
+function loadState() {
+  try {
+    const p = localStorage.getItem('daysPlaced');
+    placed = p ? JSON.parse(p) : {};
+  } catch (e) { placed = {}; }
+}
+ 
+function saveState() {
+  try { localStorage.setItem('daysPlaced', JSON.stringify(placed)); }
+  catch (e) { console.error('Failed to save', e); }
+}
+ 
+function renderAll() {
+  // Render blanks
+  document.querySelectorAll('.blank').forEach(blankEl => {
+    const slot = blankEl.dataset.slot;
+    const day = placed[slot];
+    blankEl.innerHTML = day
+      ? `<div class="day-chip placed-chip" data-day="${day}" style="background:${DAY_COLORS[day]}">${day}</div>`
+      : '';
+    if (day) makeDraggable(blankEl.querySelector('.placed-chip'), day, 'blank');
+  });
+ 
+  // Render tray — always show all 7 days in fixed order; days currently
+  // placed in a blank leave a dashed placeholder instead of the list closing up.
+  const placedDays = Object.values(placed);
+  dayChipsEl.innerHTML = '';
+  DAYS.forEach(day => {
+    if (placedDays.includes(day)) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'day-chip placeholder';
+      placeholder.style.borderColor = DAY_COLORS[day];
+      placeholder.textContent = day;
+      dayChipsEl.appendChild(placeholder);
+      return;
+    }
+    const chip = document.createElement('div');
+    chip.className = 'day-chip' + (selected === day ? ' selected' : '');
+    chip.style.background = DAY_COLORS[day];
+    chip.textContent = day;
+    chip.addEventListener('click', () => {
+      if (dragOccurred) { dragOccurred = false; return; }
+      selected = (selected === day) ? null : day;
+      renderAll();
+    });
+    makeDraggable(chip, day, 'tray');
+    dayChipsEl.appendChild(chip);
+  });
+ 
+  hintEl.textContent = selected ? `${selected} selected — now tap a blank.` : '';
+}
+ 
+// Clicking a blank places the selected day there (tap-to-place fallback)
+document.querySelectorAll('.blank').forEach(blankEl => {
+  blankEl.addEventListener('click', (e) => {
+    if (dragOccurred) { dragOccurred = false; return; }
+    const slot = blankEl.dataset.slot;
+    if (placed[slot]) {
+      // clicking a filled blank clears it
+      delete placed[slot];
+      saveState();
+      renderAll();
+      return;
+    }
+    if (selected) {
+      placed[slot] = selected;
+      selected = null;
+      saveState();
+      renderAll();
+    }
+  });
+});
+ 
+// --- Drag and drop (pointer-based, works for mouse and touch) ---
+let dragState = null;
+let dragOccurred = false;
+ 
+function makeDraggable(el, day, sourceType) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    dragState = {
+      day,
+      sourceType,
+      moved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      sourceEl: el,
+      ghost: null
+    };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd, { once: true });
+  });
+}
+ 
+function onDragMove(e) {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.startX;
+  const dy = e.clientY - dragState.startY;
+  if (!dragState.moved && Math.hypot(dx, dy) > 8) {
+    dragState.moved = true;
+    dragOccurred = true;
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.style.background = DAY_COLORS[dragState.day];
+    ghost.textContent = dragState.day;
+    document.body.appendChild(ghost);
+    dragState.ghost = ghost;
+    dragState.sourceEl.classList.add('dragging-source');
+  }
+  if (dragState.moved && dragState.ghost) {
+    dragState.ghost.style.left = (e.clientX - 20) + 'px';
+    dragState.ghost.style.top = (e.clientY - 18) + 'px';
+    document.querySelectorAll('.blank, .tray').forEach(el => el.classList.remove('drag-over'));
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const target = under && (under.closest('.blank') || under.closest('.tray'));
+    if (target) target.classList.add('drag-over');
+  }
+}
+ 
+function onDragEnd(e) {
+  document.removeEventListener('pointermove', onDragMove);
+  if (!dragState) return;
+  const { day, moved, ghost, sourceEl } = dragState;
+  document.querySelectorAll('.blank, .tray').forEach(el => el.classList.remove('drag-over'));
+ 
+  if (moved) {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const blankTarget = under && under.closest('.blank');
+    const trayTarget = under && under.closest('.tray');
+ 
+    // Remove this day from wherever it currently sits
+    Object.keys(placed).forEach(slot => { if (placed[slot] === day) delete placed[slot]; });
+ 
+    if (blankTarget) {
+      placed[blankTarget.dataset.slot] = day;
+    }
+    // if dropped on tray (or nowhere valid), it just stays unplaced — already removed above
+    selected = null;
+    saveState();
+    if (ghost) ghost.remove();
+    sourceEl.classList.remove('dragging-source');
+    renderAll();
+    setTimeout(() => { dragOccurred = false; }, 50);
+  }
+  dragState = null;
+}
+ 
+document.getElementById('resetBtn').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  if (btn.dataset.confirming === 'true') {
+    placed = {};
+    selected = null;
+    saveState();
+    renderAll();
+    btn.textContent = 'Reset';
+    btn.dataset.confirming = 'false';
+  } else {
+    btn.dataset.confirming = 'true';
+    btn.textContent = 'Tap again to confirm';
+    setTimeout(() => {
+      if (btn.dataset.confirming === 'true') {
+        btn.dataset.confirming = 'false';
+        btn.textContent = 'Reset';
+      }
+    }, 3000);
+  }
+});
+ 
+loadState();
+renderAll();
+</script>
+</body>
+</html>
+ 
+
+
