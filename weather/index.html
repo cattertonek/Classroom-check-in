@@ -1,0 +1,592 @@
+
+
+Weather · HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800&family=Inter:wght@400;600;700;800&display=swap');
+ 
+:root {
+  --header: #3A4630;
+  --cream: #F6F2E8;
+  --ink: #2A2A22;
+  --ink-soft: #6b6353;
+  --line: #E3DCC9;
+  --accent: #E7C24C;
+  --card: #ffffff;
+}
+ 
+* { box-sizing: border-box; }
+ 
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+}
+ 
+header {
+  background: var(--header);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  flex-wrap: wrap;
+}
+ 
+.back-link {
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 17.5px;
+  white-space: nowrap;
+}
+.back-link:hover { color: #fff; }
+ 
+.brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 28.5px;
+  flex: 1;
+  text-align: center;
+}
+ 
+.hdr-btn {
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 17.5px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hdr-btn:hover { background: rgba(0,0,0,0.34); }
+ 
+.layout {
+  display: flex;
+  gap: 32px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+ 
+/* Left: live weather */
+.weather-panel {
+  flex: 1.2;
+  min-width: 320px;
+}
+ 
+.weather-panel h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 23.5px;
+  margin: 0 0 16px;
+}
+ 
+.current-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+ 
+.current-icon { font-size: 62px; line-height: 1; }
+ 
+.current-temp {
+  font-family: 'Playfair Display', serif;
+  font-weight: 800;
+  font-size: 49.5px;
+  line-height: 1;
+}
+ 
+.current-desc {
+  font-size: 20.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-top: 4px;
+}
+ 
+.current-meta {
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+ 
+.hourly-label {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+ 
+.hourly-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+ 
+.hour-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 12px;
+  text-align: center;
+  min-width: 78px;
+  flex-shrink: 0;
+}
+ 
+.hour-time {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+ 
+.hour-icon { font-size: 26px; margin-bottom: 6px; }
+ 
+.hour-temp {
+  font-weight: 800;
+  font-size: 16px;
+}
+ 
+.weather-status {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  min-height: 18px;
+}
+ 
+/* Right: drag activity */
+.prompt-panel {
+  flex: 1;
+  min-width: 280px;
+}
+ 
+.prompt-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+ 
+.prompt-label {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 34px;
+  white-space: nowrap;
+}
+ 
+.blank {
+  flex: 1;
+  min-width: 180px;
+  min-height: 72px;
+  border-bottom: 4px solid var(--ink);
+  display: flex;
+  align-items: center;
+  padding: 0 6px 6px;
+  cursor: pointer;
+}
+ 
+.blank.drag-over {
+  border-bottom-color: var(--accent);
+  background: rgba(231,194,76,0.15);
+}
+ 
+.tray-label {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+ 
+.option-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+ 
+.option-chip {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 16px 22px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 20.5px;
+  text-align: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.option-chip .emoji { font-size: 22px; }
+ 
+.option-chip.selected {
+  box-shadow: 0 0 0 4px rgba(42,42,34,0.35);
+}
+ 
+.option-chip.placeholder {
+  background: transparent;
+  border: 2px dashed var(--line);
+  color: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+.option-chip.placeholder .emoji { opacity: 0; }
+ 
+.tray.drag-over {
+  outline: 3px dashed var(--ink);
+  outline-offset: 6px;
+  border-radius: 16px;
+}
+ 
+.dragging-source { opacity: 0.35; }
+ 
+.drag-ghost {
+  position: fixed;
+  top: 0; left: 0;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 16px 22px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 20.5px;
+  pointer-events: none;
+  z-index: 999;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+ 
+.hint {
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-top: 14px;
+  min-height: 16px;
+}
+</style>
+</head>
+<body>
+  <header>
+    <a class="back-link" href="../">&larr; All Tools</a>
+    <div class="brand">Weather</div>
+    <button class="hdr-btn" id="resetBtn">Reset</button>
+  </header>
+ 
+  <div class="layout">
+    <div class="weather-panel">
+      <h2>Anoka, MN</h2>
+      <div class="current-card" id="currentCard">
+        <div class="current-icon" id="currentIcon">⏳</div>
+        <div>
+          <div class="current-temp" id="currentTemp">--°</div>
+          <div class="current-desc" id="currentDesc">Loading…</div>
+          <div class="current-meta" id="currentMeta"></div>
+        </div>
+      </div>
+      <div class="hourly-label">Hourly forecast</div>
+      <div class="hourly-row" id="hourlyRow"></div>
+      <div class="weather-status" id="weatherStatus"></div>
+    </div>
+ 
+    <div class="prompt-panel">
+      <div class="prompt-row">
+        <div class="prompt-label">The weather is</div>
+        <div class="blank" id="weatherBlank"></div>
+      </div>
+ 
+      <div class="tray-label">Drag an option, or tap to select</div>
+      <div class="option-grid" id="optionGrid"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </div>
+ 
+<script>
+// ---------- Weather guess activity (drag and drop) ----------
+const OPTIONS = [
+  { label: 'Sunny',         emoji: '☀️' },
+  { label: 'Partly Cloudy', emoji: '⛅' },
+  { label: 'Cloudy',        emoji: '☁️' },
+  { label: 'Rainy',         emoji: '🌧️' },
+  { label: 'Snowy',         emoji: '❄️' },
+  { label: 'Windy',         emoji: '💨' },
+  { label: 'Foggy',         emoji: '🌫️' }
+];
+ 
+let placedLabel = null;
+let selected = null;
+let dragOccurred = false;
+let dragState = null;
+ 
+const blankEl = document.getElementById('weatherBlank');
+const optionGridEl = document.getElementById('optionGrid');
+const hintEl = document.getElementById('hint');
+ 
+function loadState() {
+  try {
+    const p = localStorage.getItem('weatherGuess');
+    placedLabel = p || null;
+  } catch (e) { placedLabel = null; }
+}
+ 
+function saveState() {
+  try {
+    if (placedLabel) localStorage.setItem('weatherGuess', placedLabel);
+    else localStorage.removeItem('weatherGuess');
+  } catch (e) { console.error('Failed to save', e); }
+}
+ 
+function renderAll() {
+  blankEl.innerHTML = '';
+  if (placedLabel) {
+    const opt = OPTIONS.find(o => o.label === placedLabel);
+    const chip = document.createElement('div');
+    chip.className = 'option-chip';
+    chip.innerHTML = `<span class="emoji">${opt.emoji}</span>${opt.label}`;
+    chip.dataset.label = opt.label;
+    blankEl.appendChild(chip);
+    makeDraggable(chip, opt.label, 'blank');
+  }
+ 
+  optionGridEl.innerHTML = '';
+  OPTIONS.forEach(opt => {
+    if (placedLabel === opt.label) {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'option-chip placeholder';
+      placeholder.innerHTML = `<span class="emoji">${opt.emoji}</span>${opt.label}`;
+      optionGridEl.appendChild(placeholder);
+      return;
+    }
+    const chip = document.createElement('div');
+    chip.className = 'option-chip' + (selected === opt.label ? ' selected' : '');
+    chip.innerHTML = `<span class="emoji">${opt.emoji}</span>${opt.label}`;
+    chip.addEventListener('click', () => {
+      if (dragOccurred) { dragOccurred = false; return; }
+      selected = (selected === opt.label) ? null : opt.label;
+      renderAll();
+    });
+    makeDraggable(chip, opt.label, 'tray');
+    optionGridEl.appendChild(chip);
+  });
+ 
+  hintEl.textContent = selected ? `${selected} selected — now tap the blank.` : '';
+}
+ 
+blankEl.addEventListener('click', () => {
+  if (dragOccurred) { dragOccurred = false; return; }
+  if (placedLabel) {
+    placedLabel = null;
+    saveState();
+    renderAll();
+    return;
+  }
+  if (selected) {
+    placedLabel = selected;
+    selected = null;
+    saveState();
+    renderAll();
+  }
+});
+ 
+function makeDraggable(el, label, sourceType) {
+  el.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    const opt = OPTIONS.find(o => o.label === label);
+    dragState = {
+      label, emoji: opt.emoji, sourceType,
+      moved: false,
+      startX: e.clientX, startY: e.clientY,
+      sourceEl: el, ghost: null
+    };
+    document.addEventListener('pointermove', onDragMove);
+    document.addEventListener('pointerup', onDragEnd, { once: true });
+  });
+}
+ 
+function onDragMove(e) {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.startX;
+  const dy = e.clientY - dragState.startY;
+  if (!dragState.moved && Math.hypot(dx, dy) > 8) {
+    dragState.moved = true;
+    dragOccurred = true;
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.style.background = '#fff';
+    ghost.innerHTML = `<span class="emoji">${dragState.emoji}</span>${dragState.label}`;
+    document.body.appendChild(ghost);
+    dragState.ghost = ghost;
+    dragState.sourceEl.classList.add('dragging-source');
+  }
+  if (dragState.moved && dragState.ghost) {
+    dragState.ghost.style.left = (e.clientX - 20) + 'px';
+    dragState.ghost.style.top = (e.clientY - 18) + 'px';
+    document.querySelectorAll('.blank, .option-grid').forEach(el => el.classList.remove('drag-over'));
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const target = under && (under.closest('.blank') || under.closest('.option-grid'));
+    if (target) target.classList.add('drag-over');
+  }
+}
+ 
+function onDragEnd(e) {
+  document.removeEventListener('pointermove', onDragMove);
+  if (!dragState) return;
+  const { label, moved, ghost, sourceEl } = dragState;
+  document.querySelectorAll('.blank, .option-grid').forEach(el => el.classList.remove('drag-over'));
+ 
+  if (moved) {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const blankTarget = under && under.closest('.blank');
+ 
+    if (placedLabel === label) placedLabel = null;
+    if (blankTarget) placedLabel = label;
+ 
+    selected = null;
+    saveState();
+    if (ghost) ghost.remove();
+    sourceEl.classList.remove('dragging-source');
+    renderAll();
+    setTimeout(() => { dragOccurred = false; }, 50);
+  }
+  dragState = null;
+}
+ 
+document.getElementById('resetBtn').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  if (btn.dataset.confirming === 'true') {
+    placedLabel = null;
+    selected = null;
+    saveState();
+    renderAll();
+    btn.textContent = 'Reset';
+    btn.dataset.confirming = 'false';
+  } else {
+    btn.dataset.confirming = 'true';
+    btn.textContent = 'Tap again to confirm';
+    setTimeout(() => {
+      if (btn.dataset.confirming === 'true') {
+        btn.dataset.confirming = 'false';
+        btn.textContent = 'Reset';
+      }
+    }, 3000);
+  }
+});
+ 
+loadState();
+renderAll();
+ 
+// ---------- Live weather for Anoka, MN (Open-Meteo, no API key needed) ----------
+const LAT = 45.1972;
+const LON = -93.3068;
+ 
+const WEATHER_CODES = {
+  0:  ['Sunny', '☀️'],
+  1:  ['Mostly Sunny', '🌤️'],
+  2:  ['Partly Cloudy', '⛅'],
+  3:  ['Cloudy', '☁️'],
+  45: ['Foggy', '🌫️'],
+  48: ['Foggy', '🌫️'],
+  51: ['Light Rain', '🌦️'],
+  53: ['Rain', '🌦️'],
+  55: ['Rain', '🌧️'],
+  56: ['Rain', '🌧️'],
+  57: ['Rain', '🌧️'],
+  61: ['Rain', '🌧️'],
+  63: ['Rain', '🌧️'],
+  65: ['Heavy Rain', '🌧️'],
+  66: ['Rain', '🌧️'],
+  67: ['Rain', '🌧️'],
+  71: ['Snow', '❄️'],
+  73: ['Snow', '❄️'],
+  75: ['Heavy Snow', '❄️'],
+  77: ['Snow', '🌨️'],
+  80: ['Rain Showers', '🌧️'],
+  81: ['Rain Showers', '🌧️'],
+  82: ['Heavy Rain Showers', '🌧️'],
+  85: ['Snow Showers', '🌨️'],
+  86: ['Snow Showers', '🌨️'],
+  // Thunderstorm codes softened to Rain — no storm/lightning imagery
+  95: ['Rain', '🌧️'],
+  96: ['Rain', '🌧️'],
+  99: ['Rain', '🌧️']
+};
+ 
+function describeCode(code) {
+  return WEATHER_CODES[code] || ['Weather', '🌡️'];
+}
+ 
+async function loadWeather() {
+  const statusEl = document.getElementById('weatherStatus');
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}` +
+      `&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m` +
+      `&hourly=temperature_2m,weather_code` +
+      `&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FChicago&forecast_days=1`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Weather request failed');
+    const data = await res.json();
+ 
+    const [desc, emoji] = describeCode(data.current.weather_code);
+    document.getElementById('currentIcon').textContent = emoji;
+    document.getElementById('currentTemp').textContent = Math.round(data.current.temperature_2m) + '°F';
+    document.getElementById('currentDesc').textContent = desc;
+    document.getElementById('currentMeta').textContent =
+      `Humidity ${Math.round(data.current.relative_humidity_2m)}% · Wind ${Math.round(data.current.wind_speed_10m)} mph`;
+ 
+    // Hourly: next 8 hours from now
+    const nowIso = new Date().toISOString().slice(0, 13);
+    let startIdx = data.hourly.time.findIndex(t => t.slice(0, 13) >= nowIso);
+    if (startIdx === -1) startIdx = 0;
+ 
+    const hourlyRow = document.getElementById('hourlyRow');
+    hourlyRow.innerHTML = '';
+    for (let i = startIdx; i < Math.min(startIdx + 8, data.hourly.time.length); i++) {
+      const t = new Date(data.hourly.time[i]);
+      const [hDesc, hEmoji] = describeCode(data.hourly.weather_code[i]);
+      const card = document.createElement('div');
+      card.className = 'hour-card';
+      card.title = hDesc;
+      card.innerHTML = `
+        <div class="hour-time">${t.toLocaleTimeString(undefined, { hour: 'numeric' })}</div>
+        <div class="hour-icon">${hEmoji}</div>
+        <div class="hour-temp">${Math.round(data.hourly.temperature_2m[i])}°</div>
+      `;
+      hourlyRow.appendChild(card);
+    }
+    statusEl.textContent = 'Updated just now';
+  } catch (err) {
+    console.error(err);
+    document.getElementById('currentIcon').textContent = '⚠️';
+    document.getElementById('currentDesc').textContent = 'Couldn\'t load weather';
+    statusEl.textContent = 'Check your internet connection and reload the page.';
+  }
+}
+ 
+loadWeather();
+</script>
+</body>
+</html>
+ 
+
+
