@@ -345,15 +345,15 @@ const hintEl = document.getElementById('hint');
  
 function loadState() {
   try {
-    const p = localStorage.getItem('weatherGuess');
+    const p = sessionStorage.getItem('weatherGuess');
     placedLabel = p || null;
   } catch (e) { placedLabel = null; }
 }
  
 function saveState() {
   try {
-    if (placedLabel) localStorage.setItem('weatherGuess', placedLabel);
-    else localStorage.removeItem('weatherGuess');
+    if (placedLabel) sessionStorage.setItem('weatherGuess', placedLabel);
+    else sessionStorage.removeItem('weatherGuess');
   } catch (e) { console.error('Failed to save', e); }
 }
  
@@ -588,5 +588,4 @@ loadWeather();
 </body>
 </html>
  
-
 
