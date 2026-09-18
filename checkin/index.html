@@ -181,6 +181,11 @@ header {
   overflow: hidden;
   flex-shrink: 0;
 }
+.chip .dot {
+  width: 34px;
+  height: 34px;
+  font-size: 13.5px;
+}
 .chip .dot img, .pill .dot img, .roster-row .dot img, .zone-avatar img {
   width: 100%; height: 100%; object-fit: cover;
 }
@@ -189,9 +194,16 @@ header {
 .hint { font-size: 12.5px; color: #8a816e; margin-top: 8px; min-height: 16px; }
  
 /* Zones */
+.zones-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+ 
 .zones {
   display: flex;
   flex: 1;
+  width: 100%;
 }
  
 @media (max-width: 800px) {
@@ -213,25 +225,35 @@ header {
 .zone[data-zone="blue"]   { background: var(--blue); }
  
 .zone[data-zone="red"] .zone-title,
-.zone[data-zone="red"] .zone-sub,
-.zone[data-zone="red"] .zone-avatar-name    { color: var(--red-ink); }
+.zone[data-zone="red"] .zone-sub    { color: var(--red-ink); }
 .zone[data-zone="yellow"] .zone-title,
-.zone[data-zone="yellow"] .zone-sub,
-.zone[data-zone="yellow"] .zone-avatar-name { color: var(--yellow-ink); }
+.zone[data-zone="yellow"] .zone-sub { color: var(--yellow-ink); }
 .zone[data-zone="green"] .zone-title,
-.zone[data-zone="green"] .zone-sub,
-.zone[data-zone="green"] .zone-avatar-name  { color: #fff; }
+.zone[data-zone="green"] .zone-sub  { color: #fff; }
 .zone[data-zone="blue"] .zone-title,
-.zone[data-zone="blue"] .zone-sub,
-.zone[data-zone="blue"] .zone-avatar-name   { color: #fff; }
+.zone[data-zone="blue"] .zone-sub   { color: #fff; }
  
-.zone-avatars {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  min-height: 102px;
-  margin-bottom: 14px;
+/* Free-placement overlay: students can be dropped anywhere across the
+   whole width, including straddling the boundary between two zones. */
+.avatar-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+ 
+.canvas-empty-hint {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.35);
+  background: rgba(255,255,255,0.55);
+  padding: 6px 14px;
+  border-radius: 999px;
+  pointer-events: none;
 }
  
 .zone-reference {
@@ -252,12 +274,14 @@ header {
 .zone-reference-photo img { width: 100%; height: 100%; object-fit: cover; }
  
 .zone-avatar {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   width: 82px;
-  flex-shrink: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
 }
  
 .zone-avatar-circle {
@@ -283,16 +307,9 @@ header {
   font-size: 13.5px;
   text-align: center;
   line-height: 1.2;
-  color: inherit;
   max-width: 82px;
   overflow-wrap: break-word;
-}
- 
-.zone-empty-hint {
-  font-size: 12.5px;
-  font-weight: 700;
-  opacity: 0.7;
-  align-self: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
  
 .zone-title {
@@ -476,7 +493,7 @@ button.btn {
 }
 .drag-ghost .dot img { width: 100%; height: 100%; object-fit: cover; }
  
-.zone.drag-over {
+.zones-wrap.drag-over {
   outline: 4px solid rgba(255,255,255,0.9);
   outline-offset: -4px;
 }
@@ -516,7 +533,10 @@ button.btn {
     <div class="hint" id="hint"></div>
   </div>
  
-  <div class="zones" id="zones"></div>
+  <div class="zones-wrap" id="zonesWrap">
+    <div class="zones" id="zones"></div>
+    <div class="avatar-canvas" id="avatarCanvas"></div>
+  </div>
  
   <footer id="todayLabel"></footer>
 </div>
@@ -524,7 +544,7 @@ button.btn {
 <div class="overlay" id="overlay">
   <div class="panel">
     <h2>Manage students</h2>
-    <div class="notice">This edits the class currently selected in the tabs above. Names, photos, and check-ins save permanently in this browser, on this device, separately for each class — nothing is ever sent anywhere else. Clearing this browser's site data (or using a different browser/device) will lose them, so stick to one device for the board.</div>
+    <div class="notice">This edits the class currently selected in the tabs above. Names and photos save permanently in this browser, on this device, separately for each class — nothing is ever sent anywhere else. Clearing this browser's site data (or using a different browser/device) will lose them, so stick to one device for the board. Check-ins are different: they clear automatically whenever this tab or browser closes, so each new session starts fresh.</div>
     <div class="panel-scroll">
       <p>One name per line.</p>
       <textarea id="rosterInput" placeholder="Amara&#10;Beckett&#10;Cruz..."></textarea>
@@ -548,11 +568,6 @@ const ZONES = [
   { key: 'green',  title: 'Green Zone',  lines: ['Happy · Calm', 'Focused · Ready to learn'] },
   { key: 'blue',   title: 'Blue Zone',   lines: ['Tired · Sad', 'Bored · Sick'] }
 ];
- 
-function todayKey() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-}
  
 function initials(name) {
   const parts = name.trim().split(/\s+/);
@@ -590,6 +605,16 @@ function avatarHtml(name) {
 // --- Drag and drop (pointer-based, works for mouse and touch) ---
 let dragState = null;
  
+// Horizontal center (%) of each zone's band, used for tap-to-place fallback
+// and to migrate old single-zone check-ins to free x/y positions.
+const ZONE_BAND_CENTERS = { red: 12.5, yellow: 37.5, green: 62.5, blue: 87.5 };
+ 
+function bandColorFor(xPct) {
+  if (xPct < 25) return 'var(--red-ink)';
+  if (xPct < 50) return 'var(--yellow-ink)';
+  return '#fff';
+}
+ 
 function makeDraggable(el, name) {
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== undefined && e.button !== 0) return;
@@ -622,9 +647,9 @@ function onDragMove(e) {
   if (dragState.moved && dragState.ghost) {
     dragState.ghost.style.left = (e.clientX - 20) + 'px';
     dragState.ghost.style.top = (e.clientY - 18) + 'px';
-    document.querySelectorAll('.zone, .tray').forEach(el => el.classList.remove('drag-over'));
+    document.querySelectorAll('.zones-wrap, .tray').forEach(el => el.classList.remove('drag-over'));
     const under = document.elementFromPoint(e.clientX, e.clientY);
-    const target = under && (under.closest('.zone') || under.closest('.tray'));
+    const target = under && (under.closest('.zones-wrap') || under.closest('.tray'));
     if (target) target.classList.add('drag-over');
   }
 }
@@ -633,14 +658,19 @@ function onDragEnd(e) {
   document.removeEventListener('pointermove', onDragMove);
   if (!dragState) return;
   const { name, moved, ghost, sourceEl } = dragState;
-  document.querySelectorAll('.zone, .tray').forEach(el => el.classList.remove('drag-over'));
+  document.querySelectorAll('.zones-wrap, .tray').forEach(el => el.classList.remove('drag-over'));
  
   if (moved) {
     const under = document.elementFromPoint(e.clientX, e.clientY);
-    const zoneTarget = under && under.closest('.zone');
+    const zoneTarget = under && under.closest('.zones-wrap');
     const trayTarget = under && under.closest('.tray');
     if (zoneTarget) {
-      checkins[name] = zoneTarget.dataset.zone;
+      const rect = zonesWrapEl.getBoundingClientRect();
+      let xPct = ((e.clientX - rect.left) / rect.width) * 100;
+      let yPct = ((e.clientY - rect.top) / rect.height) * 100;
+      xPct = Math.max(3, Math.min(97, xPct));
+      yPct = Math.max(8, Math.min(96, yPct));
+      checkins[name] = { x: xPct, y: yPct };
       selected = null;
       saveCheckins();
       renderAll();
@@ -663,6 +693,8 @@ function suppressNextClick() {
 }
  
 const zonesEl = document.getElementById('zones');
+const zonesWrapEl = document.getElementById('zonesWrap');
+const avatarCanvasEl = document.getElementById('avatarCanvas');
 const trayEl = document.getElementById('trayChips');
 const hintEl = document.getElementById('hint');
 const overlay = document.getElementById('overlay');
@@ -673,7 +705,6 @@ document.getElementById('todayLabel').textContent = new Date().toLocaleDateStrin
 function renderZones() {
   zonesEl.innerHTML = '';
   ZONES.forEach(z => {
-    const namesHere = roster.filter(n => checkins[n] === z.key);
     const div = document.createElement('div');
     div.className = 'zone';
     div.dataset.zone = z.key;
@@ -682,31 +713,54 @@ function renderZones() {
       <div class="zone-title">${z.title}</div>
       ${refPhotos.length > 0 ? `<div class="zone-reference">${refPhotos.map(src => `<div class="zone-reference-photo"><img src="${src}" alt=""></div>`).join('')}</div>` : ''}
       <div class="zone-sub">${z.lines[0]}<br>${z.lines[1]}</div>
-      <div class="zone-avatars">
-        ${namesHere.length === 0 ? '<div class="zone-empty-hint">No one here yet</div>' :
-          namesHere.map(n => `<div class="zone-avatar" data-name="${n}"><div class="zone-avatar-circle">${avatarHtml(n)}</div><div class="zone-avatar-name">${n}</div></div>`).join('')}
-      </div>
     `;
     div.addEventListener('click', (e) => {
-      const av = e.target.closest('.zone-avatar');
-      if (av) {
-        e.stopPropagation();
-        delete checkins[av.dataset.name];
-        saveCheckins();
-        renderAll();
-        return;
-      }
-      if (selected) {
-        checkins[selected] = z.key;
-        selected = null;
-        saveCheckins();
-        renderAll();
-      }
+      if (!selected) return;
+      const rect = zonesWrapEl.getBoundingClientRect();
+      let xPct = ((e.clientX - rect.left) / rect.width) * 100;
+      let yPct = ((e.clientY - rect.top) / rect.height) * 100;
+      xPct = Math.max(3, Math.min(97, xPct));
+      yPct = Math.max(8, Math.min(96, yPct));
+      checkins[selected] = { x: xPct, y: yPct };
+      selected = null;
+      saveCheckins();
+      renderAll();
     });
     zonesEl.appendChild(div);
-    div.querySelectorAll('.zone-avatar').forEach(avEl => {
-      makeDraggable(avEl, avEl.dataset.name);
+  });
+}
+ 
+function renderAvatarCanvas() {
+  avatarCanvasEl.innerHTML = '';
+  const placedNames = roster.filter(n => checkins[n]);
+ 
+  if (placedNames.length === 0) {
+    const hint = document.createElement('div');
+    hint.className = 'canvas-empty-hint';
+    hint.textContent = 'No one has checked in yet';
+    avatarCanvasEl.appendChild(hint);
+    return;
+  }
+ 
+  placedNames.forEach(n => {
+    const pos = checkins[n];
+    const el = document.createElement('div');
+    el.className = 'zone-avatar';
+    el.dataset.name = n;
+    el.style.left = pos.x + '%';
+    el.style.top = pos.y + '%';
+    el.innerHTML = `
+      <div class="zone-avatar-circle">${avatarHtml(n)}</div>
+      <div class="zone-avatar-name" style="color:${bandColorFor(pos.x)}">${n}</div>
+    `;
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      delete checkins[n];
+      saveCheckins();
+      renderAll();
     });
+    avatarCanvasEl.appendChild(el);
+    makeDraggable(el, n);
   });
 }
  
@@ -730,12 +784,13 @@ function renderTray() {
       trayEl.appendChild(chip);
     });
   }
-  hintEl.textContent = selected ? `${selected} is selected — now tap a zone.` : (unchecked.length > 0 ? 'Tap a name to select it, or drag it straight into a zone.' : '');
+  hintEl.textContent = selected ? `${selected} is selected — now tap anywhere below to place them.` : (unchecked.length > 0 ? 'Tap a name to select it, or drag it anywhere below — even between two colors.' : '');
 }
  
 function renderAll() {
   renderTray();
   renderZones();
+  renderAvatarCanvas();
 }
  
 function renderPhotoList() {
@@ -820,13 +875,20 @@ async function switchClass(id) {
  
 async function loadData() {
   zonesEl.innerHTML = '<div class="loading">Loading board…</div>';
+  avatarCanvasEl.innerHTML = '';
   try {
     const r = localStorage.getItem('roster:' + currentClass);
     roster = r ? JSON.parse(r) : [];
   } catch (e) { roster = []; }
   try {
-    const c = localStorage.getItem('checkins:' + currentClass + ':' + todayKey());
+    const c = sessionStorage.getItem('checkins:' + currentClass);
     checkins = c ? JSON.parse(c) : {};
+    // Migrate older saves (a zone key string) to a free x/y position
+    Object.keys(checkins).forEach(n => {
+      if (typeof checkins[n] === 'string') {
+        checkins[n] = { x: ZONE_BAND_CENTERS[checkins[n]] ?? 50, y: 75 };
+      }
+    });
   } catch (e) { checkins = {}; }
   try {
     const p = localStorage.getItem('photos:' + currentClass);
@@ -837,7 +899,7 @@ async function loadData() {
 }
  
 function saveCheckins() {
-  try { localStorage.setItem('checkins:' + currentClass + ':' + todayKey(), JSON.stringify(checkins)); }
+  try { sessionStorage.setItem('checkins:' + currentClass, JSON.stringify(checkins)); }
   catch (e) { console.error('Failed to save check-ins', e); }
 }
  
