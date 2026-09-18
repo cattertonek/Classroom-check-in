@@ -251,13 +251,13 @@ const hintEl = document.getElementById('hint');
  
 function loadState() {
   try {
-    const p = localStorage.getItem('daysPlaced');
+    const p = sessionStorage.getItem('daysPlaced');
     placed = p ? JSON.parse(p) : {};
   } catch (e) { placed = {}; }
 }
  
 function saveState() {
-  try { localStorage.setItem('daysPlaced', JSON.stringify(placed)); }
+  try { sessionStorage.setItem('daysPlaced', JSON.stringify(placed)); }
   catch (e) { console.error('Failed to save', e); }
 }
  
@@ -423,5 +423,4 @@ renderAll();
 </body>
 </html>
  
-
 
